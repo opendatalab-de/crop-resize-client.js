@@ -11,9 +11,17 @@
 		$(crc).triggerHandler('update');
 	};
 
+	var exportJson = function() {
+		var blob = new Blob([JSON.stringify(crc.data)], {
+			type: "text/plain;charset=utf-8"
+		});
+		saveAs(blob, 'images.json');
+	};
+
 	var init = function() {
 		$(crc).on('update', updateOutput);
 		$('#json').on('change', onJsonChange);
+		$('.btn-export-json').on('click', exportJson);
 		updateOutput();
 	};
 
