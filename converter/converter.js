@@ -1,56 +1,52 @@
 var fs = require('fs'), gm = require('gm');
 
-var path = '/Users/felix/Pictures/HP24/Sonstige/Gäste/Kinder/';
+if (process.argv.length < 3) {
+	process.exit(1);
+}
+var inputPath = process.argv[2];
+var outputPath = process.argv.length >= 4 ? process.argv[3] : inputPath;
 
-var input = {
-	"aspectRatio": "1:1",
-	"names": [],
-	"images": [{
-		"source": "Fotolia_4174651_Subscription_XL.jpg",
-		"name": "",
-		"cropAreaX1": 19.71,
-		"cropAreaY1": 12.98,
-		"cropAreaX2": 86.54,
-		"cropAreaY2": 57.53
-	}, {
-		"source": "Fotolia_4441326_Subscription_XL_2.jpg",
-		"name": "",
-		"cropAreaX1": 1.5,
-		"cropAreaY1": 3.69,
-		"cropAreaX2": 58.97,
-		"cropAreaY2": 89.9
-	}]
+var readFileOptions = {
+	encoding: 'UTF-8'
 };
+var input = JSON.parse(fs.readFileSync(inputPath + 'images.json', readFileOptions));
+var targetSizes = JSON.parse(fs.readFileSync(inputPath + 'targetSizes.json', readFileOptions));
 
-var targetSizes = [{
-	name: 'xhdpi',
-	width: 550
-}, {
-	name: 'hdpi',
-	width: 250
-}];
+try {
+	targetSizes.forEach(function(targetSize) {
+		fs.mkdirSync(outputPath + targetSize.name);
+	});
+} catch (e) {
+	if (e.code !== 'EEXIST') {
+		console.log(e);
+	}
+}
 
-var writeDone = function(err) {
-	if (!err)
-		console.log('done');
-};
+var cropAndResize = function(img, currentSize, imgPath) {
+	var cropX = img.cropAreaX1 / 100 * currentSize.width;
+	var cropY = img.cropAreaY1 / 100 * currentSize.height;
+	var cropWidth = (img.cropAreaX2 / 100 * currentSize.width) - cropX;
+	var cropHeight = (img.cropAreaY2 / 100 * currentSize.height) - cropY;
 
-targetSizes.forEach(function(targetSize) {
-	fs.mkdir(targetSize.name, function() {
-		input.images.forEach(function(img) {
-			var imgPath = path + img.source;
-			var dest = targetSize.name + '/' + img.name + '.jpg';
+	targetSizes.forEach(function(targetSize) {
+		var dest = outputPath + targetSize.name + '/' + img.name + '.jpg';
 
-			gm(imgPath).size(function(err, value) {
-				var cropX = img.cropAreaX1 / 100 * value.width;
-				var cropY = img.cropAreaY1 / 100 * value.height;
-				var cropWidth = (img.cropAreaX2 / 100 * value.width) - cropX;
-				var cropHeight = (img.cropAreaY2 / 100 * value.height) - cropY;
-
-				gm(imgPath).crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).write(dest, writeDone);
-			});
+		gm(imgPath).profile('sRGB.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).quality(80).noProfile().write(dest, function(err) {
+			if (!err) {
+				console.log(img.name + '.jpg ' + targetSize.name + ' written');
+			} else {
+				console.error('error converting ' + img.name);
+			}
 		});
 	});
-});
+};
 
-// resize and remove EXIF profile data
+input.images.forEach(function(img) {
+	var imgPath = inputPath + img.source;
+
+	gm(imgPath).size(function(err, value) {
+		if (!err) {
+			cropAndResize(img, value, imgPath);
+		}
+	});
+});
