@@ -45,13 +45,42 @@
 		enableAreaSelect();
 	};
 
+	var recalculateSelection = function(img, currentElement) {
+		if (img.cropAreaX1 === null || img.cropAreaX1 === undefined) {
+			return null;
+		}
+
+		var imgWidth = currentElement.width();
+		var imgHeight = currentElement.height();
+
+		return {
+			x1: imgWidth * img.cropAreaX1 / 100,
+			y1: imgHeight * img.cropAreaY1 / 100,
+			x2: imgWidth * img.cropAreaX2 / 100,
+			y2: imgHeight * img.cropAreaY2 / 100
+		};
+	};
+
 	var enableAreaSelect = function() {
 		if ($('#images img').eq(currentImage).is(':visible')) {
 			imgAreaSelect = $('#images img').eq(currentImage).imgAreaSelect({
 				handles: true,
 				aspectRatio: crc.data.aspectRatio,
-				instance: true
+				instance: true,
+				show: true
 			});
+
+			var currentElement = $('#images img').eq(currentImage);
+			var img = _.find(crc.data.images, function(img) {
+				return img.source === currentElement.attr('title');
+			});
+			if (img) {
+				var selection = recalculateSelection(img, currentElement);
+				if (selection !== null) {
+					imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
+					imgAreaSelect.update();
+				}
+			}
 		} else
 			setTimeout(crc.select.enableAreaSelect, 50);
 	};

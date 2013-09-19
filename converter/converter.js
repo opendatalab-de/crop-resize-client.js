@@ -47,7 +47,7 @@ targetSizes.forEach(function(targetSize) {
 				var cropWidth = (img.cropAreaX2 / 100 * value.width) - cropX;
 				var cropHeight = (img.cropAreaY2 / 100 * value.height) - cropY;
 
-				gm(imgPath).crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).noProfile().write(dest, writeDone);
+				gm(imgPath).crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).write(dest, writeDone);
 			});
 		});
 	});
