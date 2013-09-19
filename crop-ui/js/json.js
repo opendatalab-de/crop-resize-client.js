@@ -12,7 +12,7 @@
 	};
 
 	var exportJson = function() {
-		var blob = new Blob([JSON.stringify(crc.data)], {
+		var blob = new Blob([$('#json').val()], {
 			type: "text/plain;charset=utf-8"
 		});
 		saveAs(blob, 'images.json');

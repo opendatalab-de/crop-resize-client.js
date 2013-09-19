@@ -74,6 +74,8 @@
 			var img = _.find(crc.data.images, function(img) {
 				return img.source === currentElement.attr('title');
 			});
+
+			$('#name-select').val(img.name);
 			if (img) {
 				var selection = recalculateSelection(img, currentElement);
 				if (selection !== null) {
