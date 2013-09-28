@@ -75,8 +75,8 @@
 				return img.source === currentElement.attr('title');
 			});
 
-			$('#name-select').val(img.name);
 			if (img) {
+				$('#name-select').val(img.name);
 				var selection = recalculateSelection(img, currentElement);
 				if (selection !== null) {
 					imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
