@@ -1,26 +1,12 @@
-var fs = require('fs'), gm = require('gm');
+var fs = require('fs'), gm = require('gm'), path = require('path');
+var argv = require('optimist').usage('Crop and resize images as defined in an json-file\nUsage: $0 [jsonfile]').describe('o',
+		'output path (with trailing slash). Default: path of jsonfile').demand(1).argv;
 
-if (process.argv.length < 3) {
-	process.exit(1);
-}
-var inputPath = process.argv[2];
-var outputPath = process.argv.length >= 4 ? process.argv[3] : inputPath;
-
-var readFileOptions = {
+var outputPath = argv.o ? argv.o : path.dirname(argv._[0]);
+var inputPath = path.dirname(argv._[0]);
+var input = JSON.parse(fs.readFileSync(argv._[0], {
 	encoding: 'UTF-8'
-};
-var input = JSON.parse(fs.readFileSync(inputPath + 'images.json', readFileOptions));
-var targetSizes = JSON.parse(fs.readFileSync(inputPath + 'targetSizes.json', readFileOptions));
-
-try {
-	targetSizes.forEach(function(targetSize) {
-		fs.mkdirSync(outputPath + targetSize.name);
-	});
-} catch (e) {
-	if (e.code !== 'EEXIST') {
-		console.log(e);
-	}
-}
+}));
 
 var cropAndResize = function(img, currentSize, imgPath) {
 	var cropX = img.cropAreaX1 / 100 * currentSize.width;
@@ -28,21 +14,32 @@ var cropAndResize = function(img, currentSize, imgPath) {
 	var cropWidth = (img.cropAreaX2 / 100 * currentSize.width) - cropX;
 	var cropHeight = (img.cropAreaY2 / 100 * currentSize.height) - cropY;
 
-	targetSizes.forEach(function(targetSize) {
-		var dest = outputPath + targetSize.name + '/' + img.name + '.jpg';
+	input.targetSizes.forEach(function(targetSize) {
+		var destName = img.name && img.name.length > 0 ? img.name + '.jpg' : img.source;
+		var dest = outputPath + path.sep + targetSize.name + path.sep + destName;
 
 		gm(imgPath).profile('sRGB.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).quality(80).noProfile().write(dest, function(err) {
 			if (!err) {
-				console.log(img.name + '.jpg ' + targetSize.name + ' written');
+				console.log(dest + ' written');
 			} else {
-				console.error('error converting ' + img.name);
+				console.error('error converting ' + destName);
 			}
 		});
 	});
 };
 
+try {
+	input.targetSizes.forEach(function(targetSize) {
+		fs.mkdirSync(outputPath + path.sep + targetSize.name);
+	});
+} catch (e) {
+	if (e.code !== 'EEXIST') {
+		console.log(e);
+	}
+}
+
 input.images.forEach(function(img) {
-	var imgPath = inputPath + img.source;
+	var imgPath = inputPath + path.sep + img.source;
 
 	gm(imgPath).size(function(err, value) {
 		if (!err) {
