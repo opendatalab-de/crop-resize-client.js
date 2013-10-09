@@ -1,4 +1,4 @@
-var fs = require('fs'), gm = require('gm'), path = require('path');
+var fs = require('fs'), gm = require('gm'), path = require('path'), async = require('async');
 var argv = require('optimist').usage('Crop and resize images as defined in an json-file\nUsage: $0 [jsonfile]').describe('o',
 		'output path (with trailing slash). Default: path of jsonfile').describe('i', 'ignore too small images').demand(1).argv;
 
@@ -25,7 +25,7 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 		return tooSmall;
 	};
 
-	var cropAndResizeTo = function(targetSize) {
+	var cropAndResizeTo = function(targetSize, callback) {
 		var dest = outputPath + path.sep + targetSize.name + path.sep + destName;
 
 		gm(imgPath).profile('sRGB.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).quality(80).noProfile().write(dest, function(err) {
@@ -34,15 +34,16 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 			} else {
 				console.error('error converting ' + destName);
 			}
+			callback(err);
 		});
 	};
 
-	this.cropAndResize = function() {
+	this.cropAndResize = function(callback) {
 		if (!argv.i && isTooSmall(cropWidth)) {
 			console.warn(destName + ' is too small');
 		} else {
-			targetSizes.forEach(function(targetSize) {
-				cropAndResizeTo(targetSize);
+			async.each(targetSizes, cropAndResizeTo, function(err) {
+				callback(err);
 			});
 		}
 	};
@@ -58,13 +59,16 @@ try {
 	}
 }
 
-input.images.forEach(function(imgDef) {
+var q = async.queue(function(imgDef, callback) {
 	var imgPath = inputPath + path.sep + imgDef.source;
 
 	gm(imgPath).size(function(err, imgSize) {
 		if (!err) {
 			var image = new Image(imgDef, imgSize, imgPath, input.targetSizes, outputPath);
-			image.cropAndResize();
+			image.cropAndResize(callback);
+		} else {
+			callback(err);
 		}
 	});
-});
+}, 10);
+q.push(input.images);
