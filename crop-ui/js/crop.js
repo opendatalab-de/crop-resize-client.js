@@ -63,10 +63,43 @@
 
 	var getAspectRatioAdjustedToImageOrientation = function(imageElement) {
 		if (imageElement.height() > imageElement.width()) {
-			var aspectRatioParts = crc.data.aspectRatio.split(':');
-			return aspectRatioParts[1] + ':' + aspectRatioParts[0];
+			var splittedAspectRatio = crc.data.aspectRatio.split(':');
+			return splittedAspectRatio[1] + ':' + splittedAspectRatio[0];
 		}
 		return crc.data.aspectRatio;
+	};
+
+	var guessSelection = function(imageElement, aspectRatioString) {
+		var imgWidth = imageElement.width();
+		var imgHeight = imageElement.height();
+
+		var splittedAspectRatio = aspectRatioString.split(':');
+		var aspectRatio = splittedAspectRatio[0] / splittedAspectRatio[1];
+
+		var selection = {
+			x1: 0,
+			y1: 0,
+			x2: imgWidth,
+			y2: imgHeight
+		};
+
+		var selectionWidth = imgHeight * aspectRatio;
+		var selectionHeight = imgWidth / aspectRatio;
+		console.log(selectionWidth);
+		console.log(selectionHeight);
+
+		if (selectionWidth > imgWidth) {
+			selectionWidth = imgWidth;
+			selection.y1 = (imgHeight - selectionHeight) / 2;
+			selection.y2 = selection.y1 + selectionHeight;
+		}
+		if (selectionHeight > imgHeight) {
+			selectionHeight = imgHeight;
+			selection.x1 = (imgWidth - selectionWidth) / 2;
+			selection.x2 = selection.x1 + selectionWidth;
+		}
+
+		return selection;
 	};
 
 	var enableAreaSelect = function() {
@@ -79,8 +112,7 @@
 				'aspectRatio': aspectRatio,
 				'instance': true,
 				'show': true,
-				'keys': true,
-				'persistent': true
+				'keys': true
 			});
 
 			var img = _.find(crc.data.images, function(img) {
@@ -94,15 +126,12 @@
 			}
 
 			if (selection === null) {
-				// 400x200, aspect: 1:1 => 100, 0, 300, 200
-				// 400x200, aspect: 4:1 => 0, 50, 400, 150
-				// 400x200, aspect: 1:4 => 375, 0, 425, 200
+				selection = guessSelection(currentElement, aspectRatio);
 			}
+			console.log(selection);
 
-			if (selection !== null) {
-				imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
-				imgAreaSelect.update();
-			}
+			imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
+			imgAreaSelect.update();
 		} else
 			setTimeout(crc.select.enableAreaSelect, 50);
 	};
