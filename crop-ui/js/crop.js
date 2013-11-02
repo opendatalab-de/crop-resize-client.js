@@ -61,27 +61,47 @@
 		};
 	};
 
+	var getAspectRatioAdjustedToImageOrientation = function(imageElement) {
+		if (imageElement.height() > imageElement.width()) {
+			var aspectRatioParts = crc.data.aspectRatio.split(':');
+			return aspectRatioParts[1] + ':' + aspectRatioParts[0];
+		}
+		return crc.data.aspectRatio;
+	};
+
 	var enableAreaSelect = function() {
 		if ($('#images img').eq(currentImage).is(':visible')) {
-			imgAreaSelect = $('#images img').eq(currentImage).imgAreaSelect({
-				handles: true,
-				aspectRatio: crc.data.aspectRatio,
-				instance: true,
-				show: true
+			var currentElement = $('#images img').eq(currentImage);
+			var aspectRatio = getAspectRatioAdjustedToImageOrientation(currentElement);
+
+			imgAreaSelect = currentElement.imgAreaSelect({
+				'handles': true,
+				'aspectRatio': aspectRatio,
+				'instance': true,
+				'show': true,
+				'keys': true,
+				'persistent': true
 			});
 
-			var currentElement = $('#images img').eq(currentImage);
 			var img = _.find(crc.data.images, function(img) {
 				return img.source === currentElement.attr('title');
 			});
 
+			var selection = null;
 			if (img) {
 				$('#name-select').val(img.name);
-				var selection = recalculateSelection(img, currentElement);
-				if (selection !== null) {
-					imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
-					imgAreaSelect.update();
-				}
+				selection = recalculateSelection(img, currentElement);
+			}
+
+			if (selection === null) {
+				// 400x200, aspect: 1:1 => 100, 0, 300, 200
+				// 400x200, aspect: 4:1 => 0, 50, 400, 150
+				// 400x200, aspect: 1:4 => 375, 0, 425, 200
+			}
+
+			if (selection !== null) {
+				imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
+				imgAreaSelect.update();
 			}
 		} else
 			setTimeout(crc.select.enableAreaSelect, 50);
