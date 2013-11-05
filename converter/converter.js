@@ -33,6 +33,7 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 				console.log(dest + ' written');
 			} else {
 				console.error('error converting ' + destName);
+				console.error(err);
 			}
 			callback(err);
 		});
