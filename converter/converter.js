@@ -18,7 +18,7 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 	var isTooSmall = function() {
 		var tooSmall = false;
 		targetSizes.forEach(function(targetSize) {
-			if (targetSize.width > cropWidth) {
+			if (cropWidth < targetSize.width && cropHeight < targetSize.width) {
 				tooSmall = true;
 			}
 		});
@@ -27,16 +27,23 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 
 	var cropAndResizeTo = function(targetSize, callback) {
 		var dest = outputPath + path.sep + targetSize.name + path.sep + destName;
+		var resizeWidth = targetSize.width;
+		var resizeHeight = null;
+		if (cropHeight > cropWidth) {
+			resizeWidth = null;
+			resizeHeight = targetSize.width;
+		}
 
-		gm(imgPath).profile('sRGB.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(targetSize.width).quality(80).noProfile().write(dest, function(err) {
-			if (!err) {
-				console.log(dest + ' written');
-			} else {
-				console.error('error converting ' + destName);
-				console.error(err);
-			}
-			callback(err);
-		});
+		gm(imgPath).profile('sRGB.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(resizeWidth, resizeHeight).quality(80).noProfile().write(dest,
+				function(err) {
+					if (!err) {
+						console.log(dest + ' written');
+					} else {
+						console.error('error converting ' + destName);
+						console.error(err);
+					}
+					callback(err);
+				});
 	};
 
 	this.cropAndResize = function(callback) {
