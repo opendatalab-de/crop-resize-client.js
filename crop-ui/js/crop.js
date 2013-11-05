@@ -52,6 +52,13 @@
 		$(crc).triggerHandler('update');
 	};
 
+	var rotate = function() {
+		imgAreaSelect.getOptions().aspectRatio = invertAspectRatio(imgAreaSelect.getOptions().aspectRatio);
+		var selection = guessSelection($('#images img:visible'), imgAreaSelect.getOptions().aspectRatio);
+		imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
+		imgAreaSelect.update();
+	};
+
 	var displayCurrentImage = function() {
 		if (imgAreaSelect) {
 			imgAreaSelect.cancelSelection();
@@ -81,10 +88,14 @@
 
 	var getAspectRatioAdjustedToImageOrientation = function(imageElement) {
 		if (imageElement.height() > imageElement.width()) {
-			var splittedAspectRatio = crc.data.aspectRatio.split(':');
-			return splittedAspectRatio[1] + ':' + splittedAspectRatio[0];
+			return invertAspectRatio(crc.data.aspectRatio);
 		}
 		return crc.data.aspectRatio;
+	};
+
+	var invertAspectRatio = function(aspectRatio) {
+		var splittedAspectRatio = aspectRatio.split(':');
+		return splittedAspectRatio[1] + ':' + splittedAspectRatio[0];
 	};
 
 	var guessSelection = function(imageElement, aspectRatioString) {
@@ -185,6 +196,7 @@
 		$('.next-img').on('click', next);
 		$('.prev-img').on('click', prev);
 		$('.delete-img').on('click', remove);
+		$('.rotate-area').on('click', rotate);
 	};
 
 	crc.crop = {
