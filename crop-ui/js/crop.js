@@ -34,6 +34,24 @@
 		displayCurrentImage();
 	};
 
+	var remove = function() {
+		var imgToRemove = $('#images img:visible');
+		close();
+
+		crc.data.images = _.reject(crc.data.images, function(img) {
+			return img.source === imgToRemove.attr('title');
+		});
+		imgToRemove.remove();
+
+		images--;
+		if (images > 0) {
+			currentImage--;
+			next();
+		}
+
+		$(crc).triggerHandler('update');
+	};
+
 	var displayCurrentImage = function() {
 		if (imgAreaSelect) {
 			imgAreaSelect.cancelSelection();
@@ -85,8 +103,6 @@
 
 		var selectionWidth = imgHeight * aspectRatio;
 		var selectionHeight = imgWidth / aspectRatio;
-		console.log(selectionWidth);
-		console.log(selectionHeight);
 
 		if (selectionWidth > imgWidth) {
 			selectionWidth = imgWidth;
@@ -128,7 +144,6 @@
 			if (selection === null) {
 				selection = guessSelection(currentElement, aspectRatio);
 			}
-			console.log(selection);
 
 			imgAreaSelect.setSelection(selection.x1, selection.y1, selection.x2, selection.y2);
 			imgAreaSelect.update();
@@ -169,6 +184,7 @@
 		$('.close-img').on('click', close);
 		$('.next-img').on('click', next);
 		$('.prev-img').on('click', prev);
+		$('.delete-img').on('click', remove);
 	};
 
 	crc.crop = {
