@@ -34,7 +34,7 @@ var Image = function(def, size, imgPath, targetSizes, outputPath) {
 			resizeHeight = targetSize.width;
 		}
 
-		gm(imgPath).options({imageMagick: true}).crop(cropWidth, cropHeight, cropX, cropY).resize(resizeWidth, resizeHeight).quality(80).noProfile().write(dest,
+		gm(imgPath).options({imageMagick: true}).profile('sRGB_v4_ICC_preference.icc').crop(cropWidth, cropHeight, cropX, cropY).resize(resizeWidth, resizeHeight).quality(80).noProfile().write(dest,
 				function(err) {
 					if (!err) {
 						console.log(dest + ' written');
