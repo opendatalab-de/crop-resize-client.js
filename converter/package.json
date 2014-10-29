@@ -9,9 +9,9 @@
     "url": "https://github.com/opendatalab-de/crop-resize-client.js"
   },
   "dependencies": {
-    "gm": "*",
-    "optimist": "~0.6.0",
-    "async": "~0.2.9"
+    "async": "^0.2.10",
+    "gm": "^1.17.0",
+    "optimist": "^0.6.1"
   },
   "license": "MIT",
   "engines": {
