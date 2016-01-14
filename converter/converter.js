@@ -67,10 +67,13 @@ try {
 	}
 }
 
+
 var q = async.queue(function(imgDef, callback) {
 	var imgPath = inputPath + path.sep + imgDef.source;
+	console.log(imgPath);
 
 	gm(imgPath).size(function(err, imgSize) {
+		console.log(err);
 		if (!err) {
 			var image = new Image(imgDef, imgSize, imgPath, input.targetSizes, outputPath);
 			image.cropAndResize(callback);
@@ -79,4 +82,7 @@ var q = async.queue(function(imgDef, callback) {
 		}
 	});
 }, 10);
+
+console.log("Images: "+input.images.length);
+
 q.push(input.images);

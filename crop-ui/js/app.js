@@ -5,6 +5,11 @@ var crc = {};
 
 	crc.data = {
 		aspectRatio: '1:1',
+ 		targetSizes: [
+    	{
+      		name: "box",
+      		width: 250
+    	} ],
 		names: [],
 		images: []
 	};
